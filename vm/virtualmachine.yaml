@@ -1,0 +1,114 @@
+apiVersion: 'kubevirt.io/v1'
+kind: 'VirtualMachine'
+metadata:
+  labels:
+    app: 'win11-test'
+    vm.kubevirt.io/template: 'windows11-desktop-medium'
+    vm.kubevirt.io/template.namespace: 'openshift'
+    vm.kubevirt.io/template.revision: '1'
+    vm.kubevirt.io/template.version: 'v0.32.2'
+  name: 'win11-test'
+  namespace: 'golden-image'
+spec:
+  dataVolumeTemplates:
+    - apiVersion: 'cdi.kubevirt.io/v1beta1'
+      kind: 'DataVolume'
+      metadata:
+        creationTimestamp: null
+        name: 'win11-test'
+      spec:
+        source:
+          pvc:
+            name: 'win11-new-test2'
+            namespace: 'golden-image'
+        storage:
+          resources:
+            requests:
+              storage: '100Gi'
+  runStrategy: 'RerunOnFailure'
+  template:
+    metadata:
+      annotations:
+        vm.kubevirt.io/flavor: 'medium'
+        vm.kubevirt.io/os: 'windows11'
+        vm.kubevirt.io/workload: 'desktop'
+      creationTimestamp: null
+      labels:
+        kubevirt.io/domain: 'win11-test'
+        kubevirt.io/size: 'medium'
+    spec:
+      architecture: 'amd64'
+      domain:
+        clock:
+          timer:
+            hpet:
+              present: false
+            hyperv: {}
+            pit:
+              tickPolicy: 'delay'
+            rtc:
+              tickPolicy: 'catchup'
+          utc: {}
+        cpu:
+          cores: 4
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+            - disk:
+                bus: 'sata'
+              name: 'rootdisk'
+            - cdrom:
+                bus: 'sata'
+              name: 'windows-drivers-disk'
+          inputs:
+            - bus: 'usb'
+              name: 'tablet'
+              type: 'tablet'
+          interfaces:
+            - macAddress: '02:e0:e4:00:00:01'
+              masquerade: {}
+              model: 'e1000e'
+              name: 'default'
+          tpm:
+            persistent: true
+        features:
+          acpi: {}
+          apic: {}
+          hyperv:
+            frequencies: {}
+            ipi: {}
+            reenlightenment: {}
+            relaxed: {}
+            reset: {}
+            runtime: {}
+            spinlocks:
+              spinlocks: 8191
+            synic: {}
+            synictimer:
+              direct: {}
+            tlbflush: {}
+            vapic: {}
+            vpindex: {}
+          smm: {}
+        firmware:
+          bootloader:
+            efi:
+              persistent: true
+              secureBoot: true
+        machine:
+          type: 'pc-q35-rhel9.4.0'
+        memory:
+          guest: '8Gi'
+        resources: {}
+      networks:
+        - name: 'default'
+          pod: {}
+      terminationGracePeriodSeconds: 3600
+      volumes:
+        - dataVolume:
+            name: 'win11-test'
+          name: 'rootdisk'
+        - containerDisk:
+            image: 'registry.redhat.io/container-native-virtualization/virtio-win-rhel9@sha256:ef17a2baae5e8073a0afebecef70b17eaa40d10f2d5eaaf821518df5d4548e06'
+          name: 'windows-drivers-disk'
